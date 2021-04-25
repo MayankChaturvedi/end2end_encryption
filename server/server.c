@@ -24,7 +24,10 @@ void * socketThread(void *arg)
           break;
       }
       else{
-          send(friend,my_message,sizeof(my_message),0);
+          ret = send(friend,my_message,sizeof(my_message),0);
+          if(ret == -1){
+              break;
+          }  
       }
   }
   
@@ -65,12 +68,14 @@ int main(){
     else
         printf("Error\n");
     pthread_t tid[2];
+    printf("outside while\n");
     while(1)
     {
+        printf("inside while\n");
         int i=0;
 
         addr_size = sizeof serverStorage;
-        printf("Waiting for the first client to join");
+        printf("Waiting for the first client to join\n");
 
         //Accept call creates a new socket for the incoming connection
         newSocket1 = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
