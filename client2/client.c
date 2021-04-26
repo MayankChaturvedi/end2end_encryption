@@ -1,38 +1,51 @@
 #include <stdio.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
 #include <arpa/inet.h>
-#include <stdlib.h>
-#include <fcntl.h> // for open
-#include <unistd.h> // for close
-#include<pthread.h>
-
-int main(){
-    char message[1000];
-    char buffer[1024];
-    int clientSocket;
-    struct sockaddr_in serverAddr;
-    socklen_t addr_size;
-
-    // Create the socket. 
-    clientSocket = socket(PF_INET, SOCK_STREAM, 0);
-
-    //Configure settings of the server address
-    // Address family is Internet 
-    serverAddr.sin_family = AF_INET;
-
-    //Set port number, using htons function 
-    serverAddr.sin_port = htons(7799);
-
-    //Set IP address to localhost
-    serverAddr.sin_addr.s_addr = inet_addr("localhost");
-    memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
-
-    //Connect the socket to the server using the address
-    addr_size = sizeof serverAddr;
-    connect(clientSocket, (struct sockaddr *) &serverAddr, addr_size);
-    recv(clientSocket , message , strlen(message) , 0);
-    printf("%s\n",message);
-    send(clientSocket,"exit",4,0);
+#include <unistd.h>
+#include <string.h>
+   
+int main(int argc, char const *argv[])
+{
+    int sock = 0, valread;
+    struct sockaddr_in serv_addr;
+    char *hello = "Hello from client";
+    char buffer[300] = {0};
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+   
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(7799);
+       
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
+    {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
+    }
+   
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+    printf("ready to send messages\n");
+    int MAX = 300;
+    char buff[300];
+    for (;;) {
+        bzero(buff, MAX);
+  
+        // read the message from client and copy it in buffer
+        read(sock, buff, sizeof(buff));
+        // print buffer which contains the client contents
+        printf("From client: %s %d %d\n", buff,(int)strlen(buff),strcmp("exit",buff));
+        // if msg contains "Exit" then server exit and chat ended.
+        if (strncmp("exit", buff, 4) == 0) {
+            printf("Server Exit...\n");
+            break;
+        }
+    }
+    return 0;
 }

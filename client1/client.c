@@ -9,7 +9,7 @@ int main(int argc, char const *argv[])
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char *hello = "Hello from client";
-    char buffer[1024] = {0};
+    char buffer[300] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
@@ -31,9 +31,15 @@ int main(int argc, char const *argv[])
         printf("\nConnection Failed \n");
         return -1;
     }
-    printf("Hello message sent\n");
-    scanf("%s",buffer);
-    valread = send( sock , buffer, 1024, 0);
-    printf("%s\n",buffer );
+    printf("client ready\n");
+    pid_t pid[2],wpid;
+    while(1){
+        scanf("%s",buffer);
+        valread = send( sock , buffer, 300, 0);
+        printf("%s\n",buffer );
+        if(strncmp("exit", buffer, 4) == 0){
+            break;
+        }
+    }
     return 0;
 }

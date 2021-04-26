@@ -8,9 +8,38 @@
 #include <arpa/inet.h>
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
-#include<pthread.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define PORT 7799
+#define MAX 300
+
+void server_f(int me, int friend){
+    printf("me: %d my friend: %d\n",me,friend);
+    char buff[MAX];
+    // infinite loop for chat
+    for (;;) {
+        bzero(buff, MAX);
+  
+        // read the message from client and copy it in buffer
+        int ret = read(me, buff, sizeof(buff));
+        // print buffer which contains the client contents
+        printf("From client: %s %d %d\n", buff,(int)strlen(buff),strcmp("exit",buff));
+        // if msg contains "Exit" then server exit and chat ended.
+        if (ret==0 || strncmp("exit", buff, 4) == 0) {
+            printf("Server Exit...\n");
+            ret = send(friend,"exit",4,0);
+            exit(0);
+        }
+        else{
+            ret = send(friend,buff,strlen(buff),0);
+            if(ret == -1){
+                exit(0);
+            } 
+        }
+    }
+    exit(0);
+}
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket1, new_socket2, valread;
@@ -50,9 +79,10 @@ int main(int argc, char const *argv[])
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    pthread_t tid[2];
+    pid_t pid[2],wpid;
     while(1){
         printf("Waiting for a new pair of friends to join\n");
+        
         if ((new_socket1 = accept(server_fd, (struct sockaddr *)&address, 
                        (socklen_t*)&addrlen))<0)
         {
@@ -60,6 +90,9 @@ int main(int argc, char const *argv[])
             exit(EXIT_FAILURE);
         }
         printf("first friend joined\n");
+
+        //Do we need another listen here?
+        
         if ((new_socket2 = accept(server_fd, (struct sockaddr *)&address, 
                         (socklen_t*)&addrlen))<0)
         {
@@ -68,19 +101,23 @@ int main(int argc, char const *argv[])
         }
         printf("second friend joined\n");
 
-        int sockets[2]={newSocket1, newSocket2};
-        if( pthread_create(&tid[0], NULL, socketThread, sockets) != 0 )
-            printf("Failed to create thread 1\n");
-        sockets[0]=newSocket2;sockets[1]=newSocket1;
-        if( pthread_create(&tid[1], NULL, socketThread, sockets) != 0 )
-            printf("Failed to create thread 2\n");
-        
 
-        pthread_join(tid[0],NULL);
-        pthread_join(tid[1],NULL);
+        if((pid[0]=fork())==0){
+            printf("child 1 %d\n",pid[0]);
+            server_f(new_socket1,new_socket2);
+        }
+        else{
+            if((pid[1]=fork())==0){
+                printf("child 2 %d\n",pid[1]);
+                server_f(new_socket2,new_socket1);
+            }
+        }
+        
+        int status=0;
+        while((wpid=wait(&status))>0);
         printf("Both client pair disconnected, waiting for new pair to come");
-        // close(new_socket1);
-        // close(new_socket2);
+        close(new_socket1);
+        close(new_socket2);
     }
     
     return 0;
