@@ -43,11 +43,8 @@ RSA * createRSAWithFilename(char * filename,int public)
  
 int private_encrypt(unsigned char * data,int data_len,unsigned char * key, unsigned char *encrypted)
 {
-	printf("Creating rsa\n");
     RSA * rsa = createRSAWithFilename(key,0);//key = my private key
-    printf("Created rsa\n");
     int result = RSA_private_encrypt(data_len,data,encrypted,rsa,padding);
-    printf("Encrypted message\n");
     return result;
 }
 
@@ -75,14 +72,12 @@ void * writer_f(void *arg)
         bzero(buffer, MAX);
         char inp[256]={0};
         scanf("%s",inp);
-        printf("scanned thing : %s\n",inp);
         int encrlen = private_encrypt(inp,strlen(inp),"private.pem",buffer);
-        printf("encrypted thing : %s ->>%d<<- %d\n",buffer,encrlen,strlen(buffer));
         int valread = send( sock , buffer, encrlen, 0);
-        if(valread==-1 || strncmp("exit", inp, 4) == 0){
+        if(valread==-1 || strcmp("exit", inp) == 0){
             exit(0);
         }
-        printf("Your message was sent\n");
+        printf("Your message was sent successfuly\n");
     }
 }
 void * reader_f(void *arg)
@@ -96,16 +91,16 @@ void * reader_f(void *arg)
         // read the message from client and copy it in buffer
         int retval = read(newSocket, buff, sizeof(buff));
         // print buffer which contains the client contents
-        printf("From client: %s\n", buff);
+        printf("Message from friend(encrypted form): %s\n", buff);
         // if msg contains "Exit" then server exit and chat ended.
-        if (retval==0 || strncmp("exit", buff, 4) == 0) {
+        if (retval==0 || strcmp("exit", buff) == 0) {
             printf("Client Exit...\n");
             exit(0);
         }
         int decrlen = public_decrypt(buff,retval,"public.pem", decr);
         printf("Decrypted message : %s\n",decr);
-        if (retval==0 || strncmp("exit", decr, 4) == 0) {
-            printf("Client Exit...\n");
+        if (retval==0 || strcmp("exit", decr) == 0) {
+            printf("Friend asking to exits...\n");
             exit(0);
         }
     }
@@ -114,7 +109,6 @@ int main(int argc, char const *argv[])
 {
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
     char buffer[MAX] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {

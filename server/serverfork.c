@@ -15,7 +15,7 @@
 #define MAX 4098
 
 void server_f(int me, int friend){
-    printf("me: %d my friend: %d\n",me,friend);
+    printf("my client id is %d\n",me);
     unsigned char buff[MAX];
     // infinite loop for chat
     for (;;) {
@@ -24,10 +24,10 @@ void server_f(int me, int friend){
         // read the message from client and copy it in buffer
         int ret = read(me, buff, sizeof(buff));
         // print buffer which contains the client contents
-        printf("From client: %s %d %d %d\n", buff,ret, (int)strlen(buff),strcmp("exit",buff));
+        printf("Sending message from id %d to id %d\n", me,friend);
         // if msg contains "Exit" then server exit and chat ended.
-        if (ret==0 || strncmp("exit", buff, 4) == 0) {
-            printf("Server Exit...\n");
+        if (ret==0) {
+            printf("Client id %d disconnected...\n",me);
             ret = send(friend,"exit",4,0);
             exit(0);
         }
@@ -46,8 +46,6 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    unsigned char buffer[1024] = {0};
-    unsigned char *hello = "Hello from server";
        
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -81,9 +79,9 @@ int main(int argc, char const *argv[])
     }
     pid_t pid[2],wpid;
     while(1){
-        printf("Waiting for a new pair of friends to join\n");
+        printf(">>Waiting for a new pair of friends to join\n");
         
-        if ((new_socket1 = accept(server_fd, (struct sockaddr *)&address, 
+        while ((new_socket1 = accept(server_fd, (struct sockaddr *)&address, 
                        (socklen_t*)&addrlen))<0)
         {
             perror("accept");
@@ -93,7 +91,7 @@ int main(int argc, char const *argv[])
 
         //Do we need another listen here?
         
-        if ((new_socket2 = accept(server_fd, (struct sockaddr *)&address, 
+        while ((new_socket2 = accept(server_fd, (struct sockaddr *)&address, 
                         (socklen_t*)&addrlen))<0)
         {
             perror("accept");
@@ -115,7 +113,7 @@ int main(int argc, char const *argv[])
         
         int status=0;
         while((wpid=wait(&status))>0);
-        printf("Both client pair disconnected, waiting for new pair to come");
+        printf("Both the friends disconnected successfully\n");
         close(new_socket1);
         close(new_socket2);
     }
