@@ -12,7 +12,7 @@
 #include <sys/wait.h>
 
 #define PORT 7799
-#define MAX 300
+#define MAX 4098
 
 void server_f(int me, int friend){
     printf("me: %d my friend: %d\n",me,friend);
