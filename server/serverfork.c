@@ -16,7 +16,7 @@
 
 void server_f(int me, int friend){
     printf("me: %d my friend: %d\n",me,friend);
-    char buff[MAX];
+    unsigned char buff[MAX];
     // infinite loop for chat
     for (;;) {
         bzero(buff, MAX);
@@ -24,7 +24,7 @@ void server_f(int me, int friend){
         // read the message from client and copy it in buffer
         int ret = read(me, buff, sizeof(buff));
         // print buffer which contains the client contents
-        printf("From client: %s %d %d\n", buff,(int)strlen(buff),strcmp("exit",buff));
+        printf("From client: %s %d %d %d\n", buff,ret, (int)strlen(buff),strcmp("exit",buff));
         // if msg contains "Exit" then server exit and chat ended.
         if (ret==0 || strncmp("exit", buff, 4) == 0) {
             printf("Server Exit...\n");
@@ -32,7 +32,7 @@ void server_f(int me, int friend){
             exit(0);
         }
         else{
-            ret = send(friend,buff,strlen(buff),0);
+            ret = send(friend,buff,ret,0);//previous ret length used 
             if(ret == -1){
                 exit(0);
             } 
@@ -46,8 +46,8 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
-    char *hello = "Hello from server";
+    unsigned char buffer[1024] = {0};
+    unsigned char *hello = "Hello from server";
        
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)

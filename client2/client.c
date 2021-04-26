@@ -75,10 +75,11 @@ void * writer_f(void *arg)
         bzero(buffer, MAX);
         char inp[256]={0};
         scanf("%s",inp);
+        printf("scanned thing : %s\n",inp);
         int encrlen = private_encrypt(inp,strlen(inp),"private.pem",buffer);
-
+        printf("encrypted thing : %s ->>%d<<- %d\n",buffer,encrlen,strlen(buffer));
         int valread = send( sock , buffer, encrlen, 0);
-        if(valread==-1 || strncmp("exit", buffer, 4) == 0){
+        if(valread==-1 || strncmp("exit", inp, 4) == 0){
             exit(0);
         }
         printf("Your message was sent\n");
@@ -95,7 +96,7 @@ void * reader_f(void *arg)
         // read the message from client and copy it in buffer
         int retval = read(newSocket, buff, sizeof(buff));
         // print buffer which contains the client contents
-        printf("Received from friend: %s\n", buff);
+        printf("From client: %s\n", buff);
         // if msg contains "Exit" then server exit and chat ended.
         if (retval==0 || strncmp("exit", buff, 4) == 0) {
             printf("Client Exit...\n");
@@ -103,6 +104,10 @@ void * reader_f(void *arg)
         }
         int decrlen = public_decrypt(buff,retval,"public.pem", decr);
         printf("Decrypted message : %s\n",decr);
+        if (retval==0 || strncmp("exit", decr, 4) == 0) {
+            printf("Client Exit...\n");
+            exit(0);
+        }
     }
 }
 int main(int argc, char const *argv[])
@@ -126,6 +131,7 @@ int main(int argc, char const *argv[])
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
+   
     printf("Trying to connect with server\n");
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
