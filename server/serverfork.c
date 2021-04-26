@@ -11,7 +11,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#define PORT 7799
 #define MAX 4098
 
 void server_f(int me, int friend){
@@ -42,6 +41,11 @@ void server_f(int me, int friend){
 }
 int main(int argc, char const *argv[])
 {
+    if(argc<2){
+        printf("please input the port number to bind on\n");
+        exit(0);
+    }
+    int PORT = atoi(argv[1]);
     int server_fd, new_socket1, new_socket2, valread;
     struct sockaddr_in address;
     int opt = 1;

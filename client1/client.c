@@ -18,6 +18,8 @@
 #define MAX 4098
 
 int padding = RSA_PKCS1_PADDING;
+const char *public_key;
+const char *private_key;
 RSA * createRSAWithFilename(char * filename,int public)
 {
     FILE * fp = fopen(filename,"rb");
@@ -82,6 +84,7 @@ void * writer_f(void *arg)
 }
 void * reader_f(void *arg)
 {
+
     char buff[MAX];
     char decr[256];
     int newSocket = *((int *)arg);
@@ -107,6 +110,14 @@ void * reader_f(void *arg)
 }
 int main(int argc, char const *argv[])
 {
+    if(argc<5){
+        printf("Please input server port, server ip, my private key, friend's public key \n");
+        exit(0);
+    }
+    int PORT = atoi(argv[1]);
+    const char* IP = argv[2];
+    private_key = argv[3];
+    public_key = argv[4];
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char buffer[MAX] = {0};
@@ -117,10 +128,10 @@ int main(int argc, char const *argv[])
     }
    
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(7799);
+    serv_addr.sin_port = htons(PORT);
        
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
+    if(inet_pton(AF_INET, IP, &serv_addr.sin_addr)<=0) 
     {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
