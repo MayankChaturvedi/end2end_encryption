@@ -1,6 +1,7 @@
 # end2end_encryption
 
-Application of RSA Encryption in the messages between a pair of clients
+RSA Encrypted messages between a pair of clients
+To read more about RSA encryption and OpenSSL - http://hayageek.com/rsa-encryption-decryption-openssl-c/
 
 Server transfers message from one friend to another, without decrypting the message
 
